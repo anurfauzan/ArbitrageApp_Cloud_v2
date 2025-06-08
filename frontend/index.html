@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Arbitrage Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <h1>Arbitrage Opportunities</h1>
+        <div class="status-indicator">
+            Koneksi Backend: <span id="connectionStatus" class="status-offline">Offline</span>
+        </div>
+        
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Symbol</th>
+                        <th>Beli Dari</th>
+                        <th>Harga Beli</th>
+                        <th>Jual Ke</th>
+                        <th>Harga Jual</th>
+                        <th>Potensi Profit (%)</th>
+                        <th>Profit (USD)</th>
+                    </tr>
+                </thead>
+                <tbody id="opportunitiesTableBody">
+                </tbody>
+            </table>
+        </div>
+
+        <p class="no-opportunities" id="noOpportunitiesMessage">
+            Menunggu peluang arbitrase...
+        </p>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
