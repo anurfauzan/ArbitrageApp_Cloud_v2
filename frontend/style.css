@@ -1,0 +1,218 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
+
+body {
+    font-family: 'Poppins', sans-serif;
+    background-color: #1a1a2e;
+    color: #e0e0e0;
+    margin: 0;
+    padding: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    min-height: 100vh;
+    box-sizing: border-box;
+    overflow-x: hidden;
+}
+
+.container {
+    background-color: #16213e;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
+    width: 100%;
+    max-width: 1000px;
+    margin-top: 20px;
+}
+
+h1 {
+    color: #0f3460;
+    text-align: center;
+    margin-bottom: 25px;
+    font-weight: 600;
+    font-size: 2em;
+}
+
+.status-indicator {
+    text-align: center;
+    margin-bottom: 20px;
+    font-size: 0.9em;
+    color: #a0a0a0;
+}
+
+.status-online {
+    color: #4CAF50;
+    font-weight: 600;
+}
+
+.status-offline {
+    color: #f44336;
+    font-weight: 600;
+}
+
+.table-container {
+    max-height: 60vh;
+    overflow-y: auto;
+    border: 1px solid #0f3460;
+    border-radius: 8px;
+    margin-bottom: 20px;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 0;
+    min-width: 600px;
+}
+
+table th, table td {
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 1px solid #0f3460;
+}
+
+table th {
+    background-color: #0f3460;
+    color: #ffffff;
+    font-weight: 400;
+    position: sticky;
+    top: 0;
+    z-index: 1;
+}
+
+table tbody tr:hover {
+    background-color: #213a5c;
+}
+
+table tbody tr:nth-child(even) {
+    background-color: #1a2a47;
+}
+
+.no-opportunities {
+    text-align: center;
+    font-style: italic;
+    color: #a0a0a0;
+    padding: 20px;
+}
+
+@media (max-width: 768px) {
+    body {
+        padding: 10px;
+        align-items: flex-start;
+    }
+    .container {
+        padding: 20px;
+        border-radius: 8px;
+    }
+    h1 {
+        font-size: 1.8em;
+    }
+    table th, table td {
+            padding: 8px 10px;
+            font-size: 0.9em;
+        }
+    }
+
+    @media (max-width: 480px) {
+        table {
+            min-width: unset;
+        }
+        table th, table td {
+            font-size: 0.8em;
+        }
+    }
+    ```
+
+---
+
+### Kode untuk File `frontend/script.js` (Bersih)
+
+**Salin seluruh kode ini, lalu buat file `script.js` di folder `frontend/` di GitHub dan tempel di sana.**
+
+```javascript
+// ArbitrageApp_Cloud/frontend/script.js
+document.addEventListener('DOMContentLoaded', () => {
+    const opportunitiesTableBody = document.getElementById('opportunitiesTableBody');
+    const noOpportunitiesMessage = document.getElementById('noOpportunitiesMessage');
+    const connectionStatus = document.getElementById('connectionStatus');
+
+    const websocketUrl = 'wss://YOUR_CLOUD_BACKEND_URL'; 
+
+    let ws;
+    let reconnectInterval = 5000;
+    let reconnectAttempts = 0;
+    const MAX_RECONNECT_ATTEMPTS = 10;
+
+    function connectWebSocket() {
+        if (ws && ws.readyState === WebSocket.OPEN) {
+            return;
+        }
+
+        connectionStatus.textContent = 'Menghubungkan...';
+        connectionStatus.className = 'status-offline';
+
+        ws = new WebSocket(websocketUrl);
+
+        ws.onopen = () => {
+            console.log('Connected to backend WebSocket');
+            connectionStatus.textContent = 'Online';
+            connectionStatus.className = 'status-online';
+            reconnectAttempts = 0;
+            noOpportunitiesMessage.style.display = 'block'; 
+            opportunitiesTableBody.innerHTML = ''; 
+        };
+
+        ws.onmessage = (event) => {
+            const data = JSON.parse(event.data);
+            if (data.type === 'arbitrage_opportunities') {
+                updateOpportunitiesTable(data.data);
+            }
+        };
+
+        ws.onclose = () => {
+            console.log('Disconnected from backend WebSocket');
+            connectionStatus.textContent = 'Offline';
+            connectionStatus.className = 'status-offline';
+            if (reconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
+                reconnectAttempts++;
+                console.log(`Attempting to reconnect in ${reconnectInterval / 1000} seconds... (Attempt ${reconnectAttempts})`);
+                setTimeout(connectWebSocket, reconnectInterval);
+            } else {
+                console.error('Max reconnect attempts reached. Please check backend server.');
+                connectionStatus.textContent = 'Gagal Koneksi';
+                connectionStatus.className = 'status-offline';
+            }
+        };
+
+        ws.onerror = (error) => {
+            console.error('WebSocket Error:', error);
+        };
+    }
+
+    function updateOpportunitiesTable(opportunities) {
+        opportunitiesTableBody.innerHTML = '';
+        if (opportunities.length === 0) {
+            noOpportunitiesMessage.style.display = 'block';
+        } else {
+            noOpportunitiesMessage.style.display = 'none';
+            opportunities.forEach(opportunity => {
+                const row = opportunitiesTableBody.insertRow();
+                row.insertCell().textContent = opportunity.symbol;
+                row.insertCell().textContent = opportunity.buy_exchange;
+                row.insertCell().textContent = opportunity.buy_price.toFixed(8);
+                row.insertCell().textContent = opportunity.sell_exchange;
+                row.insertCell().textContent = opportunity.sell_price.toFixed(8);
+                
+                const profitPercentageCell = row.insertCell();
+                profitPercentageCell.textContent = opportunity.net_profit_percent.toFixed(4) + '%';
+                profitPercentageCell.style.color = opportunity.net_profit_percent > 0 ? '#4CAF50' : '#f44336';
+
+                const profitUsdCell = row.insertCell();
+                profitUsdCell.textContent = '$' + opportunity.gross_profit_usd.toFixed(4);
+                profitUsdCell.style.color = opportunity.gross_profit_usd > 0 ? '#4CAF50' : '#f44336';
+            });
+        }
+    }
+
+    connectWebSocket();
+});
+      
