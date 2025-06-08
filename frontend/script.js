@@ -4,7 +4,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const noOpportunitiesMessage = document.getElementById('noOpportunitiesMessage');
     const connectionStatus = document.getElementById('connectionStatus');
 
-    const websocketUrl = 'wss://YOUR_CLOUD_BACKEND_URL'; 
+    const websocketUrl = 'wss://arbitrageapp-cloud-v2.onrender.com';
 
     let ws;
     let reconnectInterval = 5000;
